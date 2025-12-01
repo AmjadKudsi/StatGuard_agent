@@ -1,0 +1,17 @@
+# Python venv and caches
+.venv/
+__pycache__/
+*.pyc
+
+# macOS junk
+.DS_Store
+
+# IDE settings
+.vscode/
+.idea/
+
+# Environment secrets
+staticguard_agent/.env
+
+# ADK build artifacts (if any appear later)
+.adk/
