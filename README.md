@@ -1,6 +1,6 @@
 # StatGuard_agent
 
-
+```
 flowchart LR
     U[Developer] --> RQ[Request<br/>- Scan repo or file<br/>- Optional fix + evaluation]
 
@@ -27,3 +27,4 @@ flowchart LR
 
     FR --> U
     FR2 --> U
+```
