@@ -1,30 +1,35 @@
 # StatGuard_agent
 
 ```
-flowchart LR
-    U[Developer] --> RQ[Request<br/>- Scan repo or file<br/>- Optional fix + evaluation]
+sequenceDiagram
+    title Figure 1: High level StaticGuard scan and patch flow
 
-    RQ --> A[StaticGuard root agent<br/>(ADK + Gemini 2.5 Flash)]
+    participant Developer
+    participant StaticGuard
+    participant ScanRepoTool
+    participant Bandit
+    participant EvaluatePatchTool
+    participant TempFS
 
-    A --> T1[Tool: scan_repo(path, severity_filter)]
-    T1 --> B[Bandit CLI<br/>static analysis only]
-    B --> J[Bandit JSON result<br/>- metrics._totals<br/>- results[]]
+    Developer->>StaticGuard: 1: Request scan of repo/file (path, severity)
+    StaticGuard->>ScanRepoTool: 2: scan_repo(path, severity_filter)
+    ScanRepoTool->>Bandit: 3: Run "bandit -f json" on path
+    Bandit-->>ScanRepoTool: 4: JSON results (metrics, findings)
+    ScanRepoTool-->>StaticGuard: 5: Summary + findings
+    StaticGuard->>Developer: 6: Explain Bandit findings
 
-    J --> A2[Agent explains findings<br/>- severity counts<br/>- key issues]
+    Developer->>StaticGuard: 7: Request minimal patch + evaluation for file
+    StaticGuard-->>StaticGuard: 8: Generate minimal patch\n(change only function with issue)
+    StaticGuard-->>StaticGuard: 9: Build full patched file content\nand unified diff
+    StaticGuard->>EvaluatePatchTool: 10: evaluate_patch_tool(file_path,\npatched_content, severity_filter)
 
-    A2 --> D{Patch and evaluate?}
+    EvaluatePatchTool->>Bandit: 11: Run "bandit -f json" on original file
+    Bandit-->>EvaluatePatchTool: 12: Original JSON results
+    EvaluatePatchTool->>TempFS: 13: Write patched_content to temp file
+    EvaluatePatchTool->>Bandit: 14: Run "bandit -f json" on temp file
+    Bandit-->>EvaluatePatchTool: 15: Patched JSON results
+    EvaluatePatchTool-->>StaticGuard: 16: original_summary,\npatched_summary, delta
 
-    D -- No --> FR[Final response to developer<br/>- findings summary]
+    StaticGuard->>Developer: 17: Return diff + before/after metrics\n+ safety assessment
 
-    D -- Yes --> PG[Generate minimal patch<br/>- change only function with issue<br/>- full patched file<br/>- unified diff]
-
-    PG --> T2[Tool: evaluate_patch_tool(<br/>file_path, patched_content,<br/>severity_filter)]
-
-    T2 --> B2[Bandit on original file<br/>Bandit on patched file]
-    B2 --> EVAL[Evaluation output<br/>- original_summary<br/>- patched_summary<br/>- delta per severity]
-
-    EVAL --> FR2[Final response to developer<br/>- diff<br/>- before/after metrics<br/>- safety assessment]
-
-    FR --> U
-    FR2 --> U
 ```
