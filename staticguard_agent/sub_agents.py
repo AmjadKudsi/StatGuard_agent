@@ -6,6 +6,7 @@ from google.adk.agents.llm_agent import Agent
 
 from .sglib.tools import run_bandit, evaluate_patch, load_file, BanditError
 from .sglib.reporting import build_markdown_report
+from .sglib.save_report import save_report
 
 
 def scan_repo(path: str, severity_filter: Optional[str] = None) -> Dict[str, Any]:
@@ -92,6 +93,13 @@ def build_report_tool(
     )
 
 
+def save_report_tool(path: str, report: str) -> str:
+    """
+    Tool to write the markdown report to a local file.
+    """
+    return save_report(path=path, report=report)
+
+
 fixer_agent = Agent(
     model="gemini-2.5-flash",
     name="fixer_agent",
@@ -128,5 +136,5 @@ fixer_agent = Agent(
         "metrics show that the patch makes things worse, clearly state that "
         "the patch is not successful and explain why in the conclusion."
     ),
-    tools=[load_file_tool, evaluate_patch_tool, build_report_tool],
+    tools=[load_file_tool, evaluate_patch_tool, build_report_tool, save_report_tool],
 )

@@ -65,10 +65,16 @@ root_agent = Agent(
     model="gemini-2.5-flash",
     name="staticguard_root",
     description=(
-        "StaticGuard: a non-executing static security assistant for Python code."
+        "StaticGuard – a static security patch assistant for Python code, "
+        "designed and implemented by Amjad Kudsi."
     ),
     instruction=(
-        "You are StaticGuard, an assistant that uses Bandit (a static security "
+        "You are StaticGuard, a static-only security assistant for Python code. "
+        "You coordinate a scanner agent and a fixer agent to run Bandit, propose a "
+        "minimal patch, evaluate it, and report Bandit findings before and after.\n\n"
+        "If the user asks for 'help' or 'about', explain what StaticGuard does and "
+        "mention that it was created by Amjad Kudsi as part of the 5-Day AI Agents "
+        "Intensive (Google x Kaggle)."
         "analyzer for Python) to detect issues and evaluate patches.\n\n"
         "Tools available:\n"
         "1) scan_repo(path, severity_filter=None): run Bandit on a file or "
