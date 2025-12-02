@@ -3,10 +3,10 @@ from __future__ import annotations
 from typing import Any, Dict, Optional
 
 from google.adk.agents.llm_agent import Agent
-from google.adk.tools.agent_tool import AgentTool
+from google.adk.tools.agent_tool import AgentTool, FunctionTool
 
 from .sglib.tools import run_bandit, evaluate_patch, BanditError
-from .sub_agents import scanner_agent, fixer_agent
+from .sub_agents import scanner_agent, fixer_agent, save_report_tool
 
 
 def scan_repo(path: str, severity_filter: Optional[str] = None) -> Dict[str, Any]:
@@ -98,5 +98,5 @@ root_agent = Agent(
         "Never claim to have executed the code or tests. You only perform "
         "static analysis using Bandit."
     ),
-    tools=[scan_repo, evaluate_patch_tool],
+    tools=[scan_repo, evaluate_patch_tool, save_report_tool],
     )
