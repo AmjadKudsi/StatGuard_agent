@@ -5,6 +5,7 @@ from typing import Any, Dict, Optional
 from google.adk.agents.llm_agent import Agent
 
 from .sglib.tools import run_bandit, evaluate_patch, load_file, BanditError
+from .sglib.reporting import build_markdown_report
 
 
 def scan_repo(path: str, severity_filter: Optional[str] = None) -> Dict[str, Any]:
@@ -73,6 +74,24 @@ scanner_agent = Agent(
 )
 
 
+def build_report_tool(
+    path: str,
+    eval_result: Dict[str, Any],
+    diff: str,
+    conclusion: str,
+) -> str:
+    """
+    Wrapper around build_markdown_report so the fixer agent can produce a
+    clean markdown report string.
+    """
+    return build_markdown_report(
+        path=path,
+        eval_result=eval_result,
+        diff=diff,
+        conclusion=conclusion,
+    )
+
+
 fixer_agent = Agent(
     model="gemini-2.5-flash",
     name="fixer_agent",
@@ -93,11 +112,21 @@ fixer_agent = Agent(
         "   b) A unified diff between the original and patched code.\n"
         "4) Call evaluate_patch_tool with the original file path and the FULL "
         "patched content to compute Bandit metrics before and after.\n"
-        "5) Return a clear explanation that includes:\n"
-        "   - the unified diff\n"
-        "   - the evaluation result (original vs patched summaries, plus delta)\n"
-        "If the issue is too complex or risky to auto-fix safely, clearly say "
-        "so and explain why you are skipping the patch."
+        "5) Based on the evaluation result, decide honestly whether the patch "
+        "improves, worsens, or does not change the static findings. If the "
+        "patch increases high severity issues or introduces serious new "
+        "problems, clearly say that it is NOT acceptable.\n"
+        "6) Finally, call build_report_tool with:\n"
+        "   - path: the original file path\n"
+        "   - eval_result: the full object returned by evaluate_patch_tool\n"
+        "   - diff: your unified diff\n"
+        "   - conclusion: a short, clear natural language conclusion about "
+        "     whether the patch should be accepted.\n"
+        "Return ONLY the markdown string from build_report_tool as your final "
+        "answer for this request.\n\n"
+        "If the issue is too complex or risky to auto-fix safely, or the "
+        "metrics show that the patch makes things worse, clearly state that "
+        "the patch is not successful and explain why in the conclusion."
     ),
-    tools=[load_file_tool, evaluate_patch_tool],
+    tools=[load_file_tool, evaluate_patch_tool, build_report_tool],
 )
