@@ -3,8 +3,10 @@ from __future__ import annotations
 from typing import Any, Dict, Optional
 
 from google.adk.agents.llm_agent import Agent
+from google.adk.tools.agent_tool import AgentTool
 
-from .sglib.tools import run_bandit, evaluate_patch as _evaluate_patch
+from .sglib.tools import run_bandit, evaluate_patch
+from .sub_agents import scanner_agent, fixer_agent
 
 
 def scan_repo(path: str, severity_filter: Optional[str] = None) -> Dict[str, Any]:
@@ -39,13 +41,15 @@ def evaluate_patch_tool(
     content. The tool runs Bandit on the original file and on a temporary
     file containing the patched content, then returns summaries and deltas.
     """
-    return _evaluate_patch(
+    return evaluate_patch(
         file_path=file_path,
         patched_content=patched_content,
         severity_filter=severity_filter,
     )
 
-
+# Wrapping subagents as tools for the coordinator (Agent-as-a-Tool pattern). 
+scanner_tool = AgentTool(agent=scanner_agent, skip_summarization=False)
+fixer_tool = AgentTool(agent=fixer_agent, skip_summarization=False)
 
 root_agent = Agent(
     model="gemini-2.5-flash",

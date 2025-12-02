@@ -7,8 +7,22 @@ from typing import Any, Dict, List, Optional
 import tempfile
 
 
+
 class BanditError(Exception):
     """Raised when the Bandit scan fails in a non recoverable way."""
+
+def load_file(path: str) -> str:
+    """
+    Load the content of a text file.
+
+    Raises FileNotFoundError or IsADirectoryError for invalid paths.
+    """
+    p = Path(path)
+    if not p.exists():
+        raise FileNotFoundError(f"File does not exist: {path}")
+    if not p.is_file():
+        raise IsADirectoryError(f"Expected a file, got a directory: {path}")
+    return p.read_text(encoding="utf-8")
 
 
 def run_bandit(
