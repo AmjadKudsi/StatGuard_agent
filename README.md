@@ -181,11 +181,11 @@ cat /tmp/staticguard_report_01.txt
 ## Example vulnerable files
 
 The staticguard_agent/examples/ folder contains several small but realistic patterns that Bandit typically flags:
-- 01_subprocess_shell.py – user input plus subprocess.call(..., shell=True).
-- 02_eval_input.py – eval on user controlled input.
-- 03_pickle_untrusted.py – pickle.load on an untrusted file.
-- 04_yaml_load.py – unsafe yaml.load without a safe loader.
-- 05_hardcoded_password.py – hard coded credential in source.
+- `01_subprocess_shell.py` – user input plus subprocess.call(..., shell=True).
+- `02_eval_input.py` – eval on user controlled input.
+- `03_pickle_untrusted.py` – pickle.load on an untrusted file.
+- `04_yaml_load.py` – unsafe yaml.load without a safe loader.
+- `05_hardcoded_password.py` – hard coded credential in source.
 
 
 
