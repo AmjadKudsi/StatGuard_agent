@@ -1,7 +1,5 @@
 #### Figure 1. High level StaticGuard flow
 
-
-
 ```mermaid
 %%{init: {'theme': 'default'}}%%
 sequenceDiagram
@@ -33,4 +31,51 @@ sequenceDiagram
     EvaluatePatchTool-->>StaticGuard: 16: original_summary,\npatched_summary, delta
 
     StaticGuard->>Developer: 17: Return diff + before/after metrics\n+ safety assessment
+```
+
+#### Figure 2. StaticGuard agent and tools
+
+```mermaid
+%%{init: {'theme': 'default'}}%%
+sequenceDiagram
+    title Figure 2: StaticGuard agent, tools, and Bandit
+
+    participant StaticGuard
+    participant ScanRepoTool
+    participant RunBandit
+    participant EvaluatePatchTool
+    participant EvaluatePatch
+    participant Bandit
+    participant FileSystem
+    participant TempFS
+
+    %% Scan path and explain findings
+
+    StaticGuard->>ScanRepoTool: 1: scan_repo(path, severity_filter)
+    ScanRepoTool->>RunBandit: 2: run_bandit(path, severity_filter)
+    RunBandit->>FileSystem: 3: Read Python file(s) from path
+    RunBandit->>Bandit: 4: Run "bandit -f json" on path
+    Bandit-->>RunBandit: 5: JSON output (metrics, results)
+    RunBandit-->>ScanRepoTool: 6: Compact summary + results list
+    ScanRepoTool-->>StaticGuard: 7: Tool return (summary, findings)
+
+    StaticGuard-->>StaticGuard: 8: Use findings to decide\nwhether to propose a patch
+
+    %% Evaluate a patch for a specific file
+
+    StaticGuard->>EvaluatePatchTool: 9: evaluate_patch_tool(\nfile_path, patched_content, severity_filter)
+    EvaluatePatchTool->>EvaluatePatch: 10: evaluate_patch(\nfile_path, patched_content, severity_filter)
+
+    EvaluatePatch->>FileSystem: 11: Read original file content
+    EvaluatePatch->>Bandit: 12: Run "bandit -f json" on original file
+    Bandit-->>EvaluatePatch: 13: JSON for original file
+
+    EvaluatePatch->>TempFS: 14: Write patched_content to temp file
+    EvaluatePatch->>Bandit: 15: Run "bandit -f json" on temp file
+    Bandit-->>EvaluatePatch: 16: JSON for patched file
+
+    EvaluatePatch-->>EvaluatePatchTool: 17: original_summary,\npatched_summary, delta
+    EvaluatePatchTool-->>StaticGuard: 18: Evaluation result
+    StaticGuard-->>StaticGuard: 19: Interpret delta and\nsummarize impact on findings
+
 ```
