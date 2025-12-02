@@ -1,34 +1,36 @@
-# StatGuard_agent
+#### Figure 1. High level StaticGuard flow
 
-```
+
+
+```mermaid
+%%{init: {'theme': 'forest'}}%%
 sequenceDiagram
-    title Figure 3: StaticGuard code and runtime interactions
-
+    title Figure 1: High level StaticGuard scan and patch flow
     participant Developer
-    participant ADKCLI
-    participant PythonVenv
-    participant StaticGuardProcess
-    participant Gemini
-    participant BanditCLI
-    participant LocalRepo
-    participant CloudRuntime
+    participant StaticGuard
+    participant ScanRepoTool
+    participant Bandit
+    participant EvaluatePatchTool
+    participant TempFS
 
-    Developer->>ADKCLI: 1: Run "adk run staticguard_agent"
-    ADKCLI->>PythonVenv: 2: Load project and dependencies
-    PythonVenv->>StaticGuardProcess: 3: Start root_agent\n(staticguard_agent.agent.root_agent)
+    Developer->>StaticGuard: 1: Request scan of repo/file (path, severity)
+    StaticGuard->>ScanRepoTool: 2: scan_repo(path, severity_filter)
+    ScanRepoTool->>Bandit: 3: Run "bandit -f json" on path
+    Bandit-->>ScanRepoTool: 4: JSON results (metrics, findings)
+    ScanRepoTool-->>StaticGuard: 5: Summary + findings
+    StaticGuard->>Developer: 6: Explain Bandit findings
 
-    Developer->>StaticGuardProcess: 4: Chat request\n(scan / patch file or repo)
-    StaticGuardProcess->>Gemini: 5: LLM call\n(plan tools, generate text)
-    Gemini-->>StaticGuardProcess: 6: Response with tool calls\nand explanations
+    Developer->>StaticGuard: 7: Request minimal patch + evaluation for file
+    StaticGuard-->>StaticGuard: 8: Generate minimal patch\n(change only function with issue)
+    StaticGuard-->>StaticGuard: 9: Build full patched file content\nand unified diff
+    StaticGuard->>EvaluatePatchTool: 10: evaluate_patch_tool(file_path,\npatched_content, severity_filter)
 
-    StaticGuardProcess->>LocalRepo: 7: Read Python files\nfor given path
-    StaticGuardProcess->>BanditCLI: 8: Run "bandit -f json"\nvia run_bandit / evaluate_patch
-    BanditCLI-->>StaticGuardProcess: 9: JSON findings\n(metrics, results)
+    EvaluatePatchTool->>Bandit: 11: Run "bandit -f json" on original file
+    Bandit-->>EvaluatePatchTool: 12: Original JSON results
+    EvaluatePatchTool->>TempFS: 13: Write patched_content to temp file
+    EvaluatePatchTool->>Bandit: 14: Run "bandit -f json" on temp file
+    Bandit-->>EvaluatePatchTool: 15: Patched JSON results
+    EvaluatePatchTool-->>StaticGuard: 16: original_summary,\npatched_summary, delta
 
-    StaticGuardProcess-->>StaticGuardProcess: 10: Compute summaries\nand before/after deltas
-    StaticGuardProcess-->>Developer: 11: Return findings,\npatch suggestions, metrics
-
-    StaticGuardProcess-->>CloudRuntime: 12: (Optional) Same agent\ncan be deployed to Agent Engine\nor Cloud Run
-
-
+    StaticGuard->>Developer: 17: Return diff + before/after metrics\n+ safety assessment
 ```
