@@ -5,7 +5,7 @@ from typing import Any, Dict, Optional
 from google.adk.agents.llm_agent import Agent
 from google.adk.tools.agent_tool import AgentTool
 
-from .sglib.tools import run_bandit, evaluate_patch
+from .sglib.tools import run_bandit, evaluate_patch, BanditError
 from .sub_agents import scanner_agent, fixer_agent
 
 
@@ -25,8 +25,18 @@ def scan_repo(path: str, severity_filter: Optional[str] = None) -> Dict[str, Any
     -------
     dict
         See run_bandit for the exact structure.
+    On error (for example missing path), returns a dict with an 'error' field
+    instead of raising, so the agent can handle it gracefully.        
     """
-    return run_bandit(path=path, severity_filter=severity_filter)
+    try:
+        return run_bandit(path=path, severity_filter=severity_filter)
+    except BanditError as e:
+        return {
+            "path": path,
+            "error": str(e),
+            "summary": {},
+            "results": [],
+        }
 
 
 def evaluate_patch_tool(

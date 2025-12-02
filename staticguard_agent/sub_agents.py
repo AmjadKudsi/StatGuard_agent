@@ -4,14 +4,23 @@ from typing import Any, Dict, Optional
 
 from google.adk.agents.llm_agent import Agent
 
-from .sglib.tools import run_bandit, evaluate_patch, load_file
+from .sglib.tools import run_bandit, evaluate_patch, load_file, BanditError
 
 
 def scan_repo(path: str, severity_filter: Optional[str] = None) -> Dict[str, Any]:
     """
     Shared tool wrapper for Bandit scans, for use by the scanner agent.
+    Returns an 'error' field instead of raising on failure.
     """
-    return run_bandit(path=path, severity_filter=severity_filter)
+    try:
+        return run_bandit(path=path, severity_filter=severity_filter)
+    except BanditError as e:
+        return {
+            "path": path,
+            "error": str(e),
+            "summary": {},
+            "results": [],
+        }
 
 
 def evaluate_patch_tool(
@@ -57,7 +66,8 @@ scanner_agent = Agent(
         "   - Bandit test_id\n"
         "   - short issue summary\n"
         "Do NOT propose code changes yourself. Your sole job is to select and "
-        "describe a single issue."
+        "describe a single issue.\n"
+        "If the scan_repo tool response contains an 'error' field, do not try to pick a finding; instead, explain the error to the caller.\n"
     ),
     tools=[scan_repo],
 )
