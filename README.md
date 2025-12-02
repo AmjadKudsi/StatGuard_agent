@@ -8,6 +8,8 @@ StaticGuard is a multi agent system that performs static only security review an
 
 This project was built as part of the 5 Day AI Agents Intensive (Google x Kaggle) and serves as a concrete instantiation of a static only code security agent for research.
 
+For more images, see the [full screenshot gallery](docs/SCREENSHOTS.md).
+
 ## Features
 
 * Static only security analysis for Python using Bandit.
