@@ -3,7 +3,7 @@
 
 
 ```mermaid
-%%{init: {'theme': 'forest'}}%%
+%%{init: {'theme': 'neutral'}}%%
 sequenceDiagram
     title Figure 1: High level StaticGuard scan and patch flow
     participant Developer
