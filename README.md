@@ -1,4 +1,4 @@
-# StaticGuard: Static Security Patch Assistant for Python
+# StatGuard: Static Security Patch Assistant for Python
 
 <p align="center">
   <img src="docs/img/UI_welcome_page.png" alt="StatGuard main UI">
