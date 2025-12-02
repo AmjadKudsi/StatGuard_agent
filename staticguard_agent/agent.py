@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any, Dict, Optional
 
 from google.adk.agents.llm_agent import Agent
-from google.adk.tools.agent_tool import AgentTool, FunctionTool
+from google.adk.tools.agent_tool import AgentTool
 
 from .sglib.tools import run_bandit, evaluate_patch, BanditError
 from .sub_agents import scanner_agent, fixer_agent, save_report_tool

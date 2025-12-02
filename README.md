@@ -1,8 +1,8 @@
 # StaticGuard: Static Security Patch Assistant for Python
 
-StaticGuard is a small multi agent system that performs static only security review and patch evaluation for Python code. It never executes the target program. Instead, it uses Bandit for static analysis, proposes minimal patches with a Gemini model, and then reruns Bandit on the patched version to measure how the static findings change.
+StaticGuard is a multi agent system that performs static only security review and patch evaluation for Python code. It never executes the target program. It uses Bandit for static analysis, a Gemini model to propose minimal patches, and then reruns Bandit on the patched version to measure how the static findings change.
 
-This project was built as part of the 5 Day AI Agents Intensive (Google x Kaggle) and is designed to be both a useful tool for real code and a concrete instantiation of a static only code security agent for research.
+This project was built as part of the 5 Day AI Agents Intensive (Google x Kaggle) and serves as a concrete instantiation of a static only code security agent for research.
 
 ## Features
 
@@ -11,13 +11,14 @@ This project was built as part of the 5 Day AI Agents Intensive (Google x Kaggle
 
   * scanner agent: triages Bandit findings and selects one issue to focus on.
   * fixer agent: proposes a minimal patch and evaluates it.
-  * coordinator agent: orchestrates a single scan and fix pass.
+  * coordinator (root) agent: orchestrates a single scan and fix pass.
 * Tools:
 
-  * `run_bandit` wrapper for Bandit in JSON mode.
-  * `evaluate_patch` that runs Bandit on original and patched code and computes severity deltas.
-  * `load_file` to read code without executing it.
-  * `build_markdown_report` to render a compact evaluation report with metrics and a diff.
+  * `run_bandit:` wrapper for Bandit in JSON mode.
+  * `evaluate_patch:` that runs Bandit on original and patched code and computes severity deltas.
+  * `load_file:` reads source code without executing it.
+  * `build_markdown_report:` renders a compact evaluation report with metrics and a diff.
+  * `save_report:` writes the report to a text file when explicitly requested.
 * Sessions and memory:
 
   * `InMemorySessionService` for per run sessions.
@@ -36,9 +37,16 @@ staticguard_agent/
     __init__.py
     tools.py         # run_bandit, evaluate_patch, load_file
     reporting.py     # build_markdown_report
+    save_report.py   # save_report helper
+  examples/ 
+    01_subprocess_shell.py 
+    02_eval_input.py 
+    03_pickle_untrusted.py 
+    04_yaml_load.py 
+    05_hardcoded_password.py
   main_local.py      # CLI runner using Runner + sessions + memory
 tests/
-  test_tools.py      # small tests for run_bandit and evaluate_patch
+  test_tools.py      # tests for run_bandit and evaluate_patch
 requirements.txt
 README.md
 .env.example
@@ -51,8 +59,8 @@ README.md
 1. Clone the repository and create a virtual environment:
 
 ```bash
-git clone [https://github.com/](https://github.com/)<your-user>/staticguard-agent.git
-cd staticguard-agent
+git clone [https://github.com/](https://github.com/)AmjadKudsi/StatGuard_agent.git.
+cd staticguard_agent
 
 python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate ```
@@ -62,10 +70,23 @@ source .venv/bin/activate  # Windows: .venv\Scripts\activate ```
 ```bash
 pip install -r requirements.txt ```
 
-3. Configure your Gemini API key. Create `.env` in the project root or in `staticguard_agent/`:
+3. Configure your Gemini API key. Copy .env.example to .env and edit:
+
+
+
+```bash
+cp .env.example .env
+```
+Then set:
 
 ```text
-GOOGLE_API_KEY=your_api_key_here ```
+GOOGLE_API_KEY=your_gemini_api_key_here
+
+GOOGLE_CLOUD_PROJECT=your_gcp_project_id_here # optional, for cloud deploy
+
+GOOGLE_CLOUD_REGION=us-central1 # optional, for cloud deploy
+
+```
 
 You can get an API key from Google AI Studio.
 
@@ -79,15 +100,17 @@ The simplest entry point is the CLI in `main_local.py`:
 source .venv/bin/activate
 python -m staticguard_agent.main_local ```
 
-You will be prompted for a path to scan:
+You will be prompted for a path to scan, for example:
 
 ```text
-Path to repo or file to scan: /tmp/bandit_demo/demo.py ```
+Path to repo or file to scan: staticguard_agent/examples/01_subprocess_shell.py
+
+```
 
 StaticGuard will:
 
 * run the multi agent pipeline (scanner, fixer, coordinator).
-* print a markdown report that includes:
+* print a markdown report with:
 
   * Bandit findings before and after the patch, by severity.
   * a conclusion about whether the patch improved the situation.
@@ -107,13 +130,14 @@ adk run staticguard_agent ```
 This loads `root_agent` and lets you interact with it in the terminal. Example prompt:
 
 ```text
-staticguard_root> Perform a single scan-and-fix pass on /tmp/bandit_demo/demo.py.
-Use the scanner agent to pick one high severity issue, then use the fixer agent
+staticguard_root> Perform a single scan-and-fix pass on staticguard_agent/examples/01_subprocess_shell.py.
+
+Use the scanner agent to pick one high severity or medium severity Bandit finding, then use the fixer agent
 to propose a minimal patch and evaluate it. Return the markdown report. ```
 
 ### 3. ADK web UI
 
-For a browser based UI, use the ADK dev web server from the project root:
+For a browser based UI, start the ADK dev web server from the project root:
 
 ```bash
 source .venv/bin/activate
@@ -127,38 +151,43 @@ Then open:
 In the dev UI:
 
 1. Select the app `staticguard_agent` (do not select `sglib`).
-2. Start a new session.
-3. Send a message such as:
+2. Create a new session.
+3. Use a prompt such as:
 
 ```text
-Perform a single scan-and-fix pass on /tmp/bandit_demo/demo.py.
-Use the scanner agent to pick one high severity (or medium if no high)
+Perform a single scan-and-fix pass on staticguard_agent/examples/01_subprocess_shell.py.
+Use the scanner agent to pick one high severity or medium severity Bandit finding,
 Bandit finding, then use the fixer agent to propose a minimal patch and
 evaluate it. Return the markdown report. ```
 
-You will see the full report rendered as the assistant response. This is a simple UI for the capstone demo and screenshots.
+You will see the full report rendered as the assistant response.
+
+## To save a report to disk, you can ask:
+```text
+
+Please save this report to /tmp/staticguard_report_01.txt using the save_report_tool.
+
+```
+
+Then inspect the file from a terminal:
+
+```bash
+ls -l /tmp/staticguard_report_01.txt
+
+cat /tmp/staticguard_report_01.txt
+
+```
 
 ## Example vulnerable file
 
-To try StaticGuard on a small but realistic issue, create:
+The staticguard_agent/examples/ folder contains several small but realistic patterns that Bandit typically flags:
+01_subprocess_shell.py – user input plus subprocess.call(..., shell=True).
+02_eval_input.py – eval on user controlled input.
+03_pickle_untrusted.py – pickle.load on an untrusted file.
+04_yaml_load.py – unsafe yaml.load without a safe loader.
+05_hardcoded_password.py – hard coded credential in source.
 
-```bash
-mkdir -p /tmp/bandit_demo
-cat > /tmp/bandit_demo/demo.py << 'EOF'
-import subprocess
 
-def bad():
-cmd = "ls " + input("Enter path: ")
-subprocess.call(cmd, shell=True)
-EOF ```
-
-This snippet contains a classic `subprocess` issue that Bandit flags (user controlled input combined with `shell=True`). StaticGuard should:
-
-* detect the Bandit finding.
-* propose a patch that removes `shell=True` and uses an argument list.
-* show how high severity issues change before and after the patch.
-
-The tests in `tests/test_tools.py` use a related pattern so that readers can see the behavior of `run_bandit` and `evaluate_patch` in isolation.
 
 ## Running tests
 
@@ -200,6 +229,5 @@ This publishes the same `root_agent` used in local development to a managed runt
 ## Limitations and safety notes
 
 * StaticGuard does not execute the target program. All analysis is static and based on Bandit and file reads.
-* The agent does not have any tool that can create or modify files in user repositories. It only writes temporary files inside `evaluate_patch` to rerun Bandit on patched content.
-* The agent is instructed not to claim that it created or saved files. It only proposes patches as text and leaves application of those patches to the user.
+* The agent does not have any tool that can create or modify files in user repositories. It only writes temporary files inside `evaluate_patch` and save_report as part of static analysis and reporting.
 * The evaluation is based on Bandit’s rule set and severities. A decrease in high severity findings is a positive signal, but developers should still review patches and the full report before accepting changes.
