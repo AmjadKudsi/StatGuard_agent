@@ -199,3 +199,9 @@ adk deploy staticguard_agent
 ```
 
 This publishes the same `root_agent` used in local development to a managed runtime with observability and scaling. Whether this is free depends on your Google Cloud account and current pricing. You should check your billing information and quotas before deploying.
+
+## License
+
+- **Code:** Licensed under the [MIT License](LICENSE).  
+- **Writeup and documentation:** Licensed under the  
+  [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/).
