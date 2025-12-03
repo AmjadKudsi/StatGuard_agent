@@ -69,16 +69,16 @@ git clone [https://github.com/](https://github.com/)AmjadKudsi/StatGuard_agent.g
 cd staticguard_agent
 
 python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate ```
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+```
 
 2. Install dependencies:
 
 ```bash
-pip install -r requirements.txt ```
+pip install -r requirements.txt
+```
 
 3. Configure your Gemini API key. Copy .env.example to .env and edit:
-
-
 
 ```bash
 cp .env.example .env
@@ -104,13 +104,13 @@ The simplest entry point is the CLI in `main_local.py`:
 
 ```bash
 source .venv/bin/activate
-python -m staticguard_agent.main_local ```
+python -m staticguard_agent.main_local
+```
 
 You will be prompted for a path to scan, for example:
 
 ```text
 Path to repo or file to scan: staticguard_agent/examples/01_subprocess_shell.py
-
 ```
 
 StaticGuard will:
@@ -131,7 +131,8 @@ You can also run the agent in a simple REPL using `adk run`:
 
 ```bash
 source .venv/bin/activate
-adk run staticguard_agent ```
+adk run staticguard_agent
+```
 
 This loads `root_agent` and lets you interact with it in the terminal. Example prompt:
 
@@ -139,7 +140,8 @@ This loads `root_agent` and lets you interact with it in the terminal. Example p
 staticguard_root> Perform a single scan-and-fix pass on staticguard_agent/examples/01_subprocess_shell.py.
 
 Use the scanner agent to pick one high severity or medium severity Bandit finding, then use the fixer agent
-to propose a minimal patch and evaluate it. Return the markdown report. ```
+to propose a minimal patch and evaluate it. Return the markdown report.
+```
 
 ### 3. ADK web UI
 
@@ -147,12 +149,14 @@ For a browser based UI, start the ADK dev web server from the project root:
 
 ```bash
 source .venv/bin/activate
-adk web . ```
+adk web .
+```
 
 Then open:
 
 ```text
-[http://127.0.0.1:8000](http://127.0.0.1:8000) ```
+[http://127.0.0.1:8000](http://127.0.0.1:8000)
+```
 
 In the dev UI:
 
@@ -164,15 +168,14 @@ In the dev UI:
 Perform a single scan-and-fix pass on staticguard_agent/examples/01_subprocess_shell.py.
 Use the scanner agent to pick one high severity or medium severity Bandit finding,
 Bandit finding, then use the fixer agent to propose a minimal patch and
-evaluate it. Return the markdown report. ```
+evaluate it. Return the markdown report.
+```
 
 You will see the full report rendered as the assistant response.
 
 ## To save a report to disk, you can ask:
 ```text
-
 Please save this report to /tmp/staticguard_report_01.txt using the save_report_tool.
-
 ```
 
 Then inspect the file from a terminal:
@@ -201,7 +204,8 @@ To run the small unit tests for the core tools:
 
 ```bash
 pip install pytest
-pytest ```
+pytest
+```
 
 The tests cover:
 
@@ -216,7 +220,8 @@ The tests cover:
 The project is packaged as an ADK agent (`staticguard_agent`) and can be run through the ADK dev web UI using:
 
 ```bash
-adk web . ```
+adk web .
+```
 
 This starts a local web server where you can select the `staticguard_agent` app and interact with StaticGuard through a browser. This serves as the primary UI for the capstone demonstration and does not require additional infrastructure.
 
@@ -228,7 +233,8 @@ StaticGuard can be deployed to Vertex AI Agent Engine using `adk deploy`. A poss
 export GOOGLE_CLOUD_PROJECT=<your-project-id>
 export GOOGLE_CLOUD_REGION=us-central1
 
-adk deploy staticguard_agent ```
+adk deploy staticguard_agent
+```
 
 This publishes the same `root_agent` used in local development to a managed runtime with observability and scaling. Whether this is free depends on your Google Cloud account and current pricing. You should check your billing information and quotas before deploying.
 
