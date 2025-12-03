@@ -18,7 +18,7 @@ flowchart TD
     end
 
     %% Tools
-    subgraph Tools["Function & Agent Tools"]
+    subgraph Tools["Function and Agent Tools"]
         RB["run_bandit tool"]
         LF["load_file_tool"]
         EP["evaluate_patch_tool"]
@@ -29,54 +29,51 @@ flowchart TD
     end
 
     %% External systems
-    subgraph External["External Systems & State"]
-        Repo["Target repo / file (crm_helper, etc.)"]
+    subgraph External["External Systems and State"]
+        Repo["Target repo or file (crm_helper etc)"]
         Bandit["Bandit CLI"]
-        FS["Filesystem (/tmp, reports, etc.)"]
+        FS["Filesystem (/tmp, reports)"]
         Mem["InMemoryMemoryService (CLI only)"]
     end
 
     %% Edges: UI -> Runner -> Root
-    CLI -->|user prompt + path| Runner
-    Web -->|user prompt + path| Runner
+    CLI -->|"user prompt and path"| Runner
+    Web -->|"user prompt and path"| Runner
     Runner --> Root
 
     %% Root agent uses sub-agents and tools
-    Root -->|scan request| ScanTool
+    Root -->|"scan request"| ScanTool
     ScanTool --> ScannerA
-    ScannerA -->|call| RB
-    RB -->|scan path| Repo
-    RB -->|run bandit| Bandit
+    ScannerA -->|"call run_bandit"| RB
+    RB -->|"scan path"| Repo
+    RB -->|"run bandit"| Bandit
     Bandit --> RB
     RB --> ScannerA
-    ScannerA -->|task (file + finding)| Root
+    ScannerA -->|"task: file and finding"| Root
 
-    Root -->|fix request| FixTool
+    Root -->|"fix request"| FixTool
     FixTool --> FixerA
 
-    FixerA -->|load code| LF
+    FixerA -->|"load code"| LF
     LF --> Repo
     LF --> FixerA
 
-    FixerA -->|evaluate patch| EP
-    EP -->|Bandit original & patched| Bandit
+    FixerA -->|"evaluate patch"| EP
+    EP -->|"bandit before and after"| Bandit
+    Bandit --> EP
     EP --> FixerA
 
-    FixerA -->|build markdown report| BR
+    FixerA -->|"build markdown report"| BR
     BR --> FixerA
 
     %% Optional save report
-    Root -->|save report (if user asks)| SR
+    Root -->|"save report if user asks"| SR
     SR --> FS
 
     %% CLI-only memory
-    Runner -->|add run_summary| Mem
-    Runner -->|search previous runs| Mem
+    Runner -->|"add run summary"| Mem
+    Runner -->|"search previous r
 
-    %% Output
-    Root -->|markdown report + messages| Runner
-    Runner --> CLI
-    Runner --> Web
 
 ```
 
