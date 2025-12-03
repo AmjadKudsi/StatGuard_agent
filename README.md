@@ -1,7 +1,7 @@
 # StatGuard: Static Security Patch Assistant for Python
 
 <p align="center">
-  <img src="docs/img/UI_welcome_page.png" alt="StatGuard main UI">
+  <img src="docs/img/cover.png" alt="StatGuard main UI">
 </p>
 
 StaticGuard is a multi agent system that performs static only security review and patch evaluation for Python code. It never executes the target program. It uses Bandit for static analysis, a Gemini model to propose minimal patches, and then reruns Bandit on the patched version to measure how the static findings change.
