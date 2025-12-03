@@ -1,8 +1,84 @@
 # StatGuard: Static Security Patch Assistant for Python
 
-<p align="center">
-  <img src="docs/img/UI_welcome_page.png" alt="StatGuard main UI">
-</p>
+```mermaid
+flowchart TD
+
+    %% UI layer
+    subgraph UI["User Interfaces"]
+        CLI["CLI: main_local.py"]
+        Web["ADK Web UI (staticguard_agent)"]
+    end
+
+    %% ADK orchestration
+    subgraph ADK["ADK Orchestration & Agents"]
+        Runner["ADK Runner + SessionService"]
+        Root["root_agent (StaticGuard coordinator)"]
+        ScannerA["scanner_agent"]
+        FixerA["fixer_agent"]
+    end
+
+    %% Tools
+    subgraph Tools["Function & Agent Tools"]
+        RB["run_bandit tool"]
+        LF["load_file_tool"]
+        EP["evaluate_patch_tool"]
+        BR["build_report_tool"]
+        SR["save_report_tool"]
+        ScanTool["scanner_agent_tool (AgentTool)"]
+        FixTool["fixer_agent_tool (AgentTool)"]
+    end
+
+    %% External systems
+    subgraph External["External Systems & State"]
+        Repo["Target repo / file (crm_helper, etc.)"]
+        Bandit["Bandit CLI"]
+        FS["Filesystem (/tmp, reports, etc.)"]
+        Mem["InMemoryMemoryService (CLI only)"]
+    end
+
+    %% Edges: UI -> Runner -> Root
+    CLI -->|user prompt + path| Runner
+    Web -->|user prompt + path| Runner
+    Runner --> Root
+
+    %% Root agent uses sub-agents and tools
+    Root -->|scan request| ScanTool
+    ScanTool --> ScannerA
+    ScannerA -->|call| RB
+    RB -->|scan path| Repo
+    RB -->|run bandit| Bandit
+    Bandit --> RB
+    RB --> ScannerA
+    ScannerA -->|task (file + finding)| Root
+
+    Root -->|fix request| FixTool
+    FixTool --> FixerA
+
+    FixerA -->|load code| LF
+    LF --> Repo
+    LF --> FixerA
+
+    FixerA -->|evaluate patch| EP
+    EP -->|Bandit original & patched| Bandit
+    EP --> FixerA
+
+    FixerA -->|build markdown report| BR
+    BR --> FixerA
+
+    %% Optional save report
+    Root -->|save report (if user asks)| SR
+    SR --> FS
+
+    %% CLI-only memory
+    Runner -->|add run_summary| Mem
+    Runner -->|search previous runs| Mem
+
+    %% Output
+    Root -->|markdown report + messages| Runner
+    Runner --> CLI
+    Runner --> Web
+
+```
 
 StaticGuard is a multi agent system that performs static only security review and patch evaluation for Python code. It never executes the target program. It uses Bandit for static analysis, a Gemini model to propose minimal patches, and then reruns Bandit on the patched version to measure how the static findings change.
 
