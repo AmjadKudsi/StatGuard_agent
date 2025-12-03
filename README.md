@@ -33,33 +33,6 @@ For more images, see the [complete UI images gallery](docs/SCREENSHOTS.md).
 
   * The system explicitly reports whether a patch reduced high severity findings, left them unchanged, or introduced new issues.
 
-## Repository layout
-
-```
-staticguard_agent/
-  agent.py           # root_agent coordinator, scanner and fixer tools
-  sub_agents.py      # scanner_agent and fixer_agent definitions
-  sglib/
-    __init__.py
-    tools.py         # run_bandit, evaluate_patch, load_file
-    reporting.py     # build_markdown_report
-    save_report.py   # save_report helper
-  examples/ 
-    01_subprocess_shell.py 
-    02_eval_input.py 
-    03_pickle_untrusted.py 
-    04_yaml_load.py 
-    05_hardcoded_password.py
-  main_local.py      # CLI runner using Runner + sessions + memory
-tests/
-  test_tools.py      # tests for run_bandit and evaluate_patch
-requirements.txt
-README.md
-.env.example
-```
-
-`sglib` is a helper package for tools and reporting. `staticguard_agent.agent` exposes `root_agent`, which is the entry point for both the CLI and the ADK web UI.
-
 ## Setup
 
 1. Clone the repository and create a virtual environment:
@@ -187,17 +160,6 @@ cat /tmp/staticguard_report_01.txt
 
 ```
 
-## Example vulnerable files
-
-The staticguard_agent/examples/ folder contains several small but realistic patterns that Bandit typically flags:
-- `01_subprocess_shell.py` – user input plus subprocess.call(..., shell=True).
-- `02_eval_input.py` – eval on user controlled input.
-- `03_pickle_untrusted.py` – pickle.load on an untrusted file.
-- `04_yaml_load.py` – unsafe yaml.load without a safe loader.
-- `05_hardcoded_password.py` – hard coded credential in source.
-
-
-
 ## Running tests
 
 To run the small unit tests for the core tools:
@@ -237,9 +199,3 @@ adk deploy staticguard_agent
 ```
 
 This publishes the same `root_agent` used in local development to a managed runtime with observability and scaling. Whether this is free depends on your Google Cloud account and current pricing. You should check your billing information and quotas before deploying.
-
-## Limitations and safety notes
-
-* StaticGuard does not execute the target program. All analysis is static and based on Bandit and file reads.
-* The agent does not have any tool that can create or modify files in user repositories. It only writes temporary files inside `evaluate_patch` and save_report as part of static analysis and reporting.
-* The evaluation is based on Bandit’s rule set and severities. A decrease in high severity findings is a positive signal, but developers should still review patches and the full report before accepting changes.
