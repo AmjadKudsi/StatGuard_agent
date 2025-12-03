@@ -202,6 +202,5 @@ This publishes the same `root_agent` used in local development to a managed runt
 
 ## License
 
-- **Code:** Licensed under the [MIT License](LICENSE).  
 - **Writeup and documentation:** Licensed under the  
   [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/).
